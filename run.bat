@@ -19,6 +19,10 @@ if not exist "%TOMCAT_HOME%\bin\catalina.bat" (
     exit /b 1
 )
 
+:: CATALINA_HOME must be set in the current session so startup.bat / shutdown.bat work correctly.
+set "CATALINA_HOME=%TOMCAT_HOME%"
+set "CATALINA_BASE=%TOMCAT_HOME%"
+
 :: Ensure we are starting from the batch file's directory
 cd /d "%~dp0"
 

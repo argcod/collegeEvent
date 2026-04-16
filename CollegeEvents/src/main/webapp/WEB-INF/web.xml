@@ -7,16 +7,45 @@
 
   <display-name>College Event Manager</display-name>
 
+  <!-- ============================================================
+       Feature 0 (existing) – EventServlet  →  /events
+       ============================================================ -->
   <servlet>
     <servlet-name>EventServlet</servlet-name>
     <servlet-class>com.college.events.EventServlet</servlet-class>
   </servlet>
-
   <servlet-mapping>
     <servlet-name>EventServlet</servlet-name>
     <url-pattern>/events</url-pattern>
   </servlet-mapping>
 
+  <!-- ============================================================
+       Feature 1 – LoginServlet  →  /login
+       Handles login form (GET), authentication (POST), and logout.
+       ============================================================ -->
+  <servlet>
+    <servlet-name>LoginServlet</servlet-name>
+    <servlet-class>com.college.events.LoginServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LoginServlet</servlet-name>
+    <url-pattern>/login</url-pattern>
+  </servlet-mapping>
+
+  <!-- ============================================================
+       Feature 3 – DashboardServlet  →  /dashboard
+       ============================================================ -->
+  <servlet>
+    <servlet-name>DashboardServlet</servlet-name>
+    <servlet-class>com.college.events.DashboardServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DashboardServlet</servlet-name>
+    <url-pattern>/dashboard</url-pattern>
+  </servlet-mapping>
+
+  <!-- Default welcome page routes through EventServlet (Tomcat resolves
+       "events" → /events servlet mapping when no physical file exists) -->
   <welcome-file-list>
     <welcome-file>index.jsp</welcome-file>
   </welcome-file-list>

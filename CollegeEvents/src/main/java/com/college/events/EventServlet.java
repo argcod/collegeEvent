@@ -1,17 +1,33 @@
 package com.college.events;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-
+/**
+ * Central controller for all event operations.
+ *
+ * Feature 1 – Authentication:  add/edit/delete actions are protected;
+ *             unauthenticated requests are redirected to /login.
+ * Feature 2 – Search/Filter:   list action reads keyword + category
+ *             params and delegates to EventDAO.searchEvents().
+ */
 public class EventServlet extends HttpServlet {
 
     private final EventDAO dao = new EventDAO();
 
+    /** Returns true when the request carries a valid admin session. */
+    private boolean isLoggedIn(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        return session != null && session.getAttribute("loggedInUser") != null;
+    }
+
+    // =====================================================================
+    //  GET
+    // =====================================================================
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
@@ -20,30 +36,60 @@ public class EventServlet extends HttpServlet {
         if (action == null) action = "list";
 
         switch (action) {
+
+            // --- Show Add-Event form (login required) ---
             case "new":
+                if (!isLoggedIn(req)) {
+                    res.sendRedirect(req.getContextPath() + "/login?msg=unauthorized");
+                    return;
+                }
                 req.getRequestDispatcher("event-form.jsp").forward(req, res);
                 break;
 
+            // --- Show Edit-Event form (login required) ---
             case "edit":
+                if (!isLoggedIn(req)) {
+                    res.sendRedirect(req.getContextPath() + "/login?msg=unauthorized");
+                    return;
+                }
                 int id = Integer.parseInt(req.getParameter("id"));
                 req.setAttribute("event", dao.getEventById(id));
                 req.getRequestDispatcher("event-form.jsp").forward(req, res);
                 break;
 
+            // --- Delete event (login required) ---
             case "delete":
+                if (!isLoggedIn(req)) {
+                    res.sendRedirect(req.getContextPath() + "/login?msg=unauthorized");
+                    return;
+                }
                 dao.deleteEvent(Integer.parseInt(req.getParameter("id")));
-                res.sendRedirect("events?action=list&msg=deleted");
+                res.sendRedirect(req.getContextPath() + "/events?msg=deleted");
                 break;
 
-            default: // list
-                req.setAttribute("events", dao.getAllEvents());
+            // --- List events  (public – no login required to browse) ---
+            default:
+                String keyword  = req.getParameter("keyword");
+                String category = req.getParameter("category");
+                // searchEvents() returns all events when both params are null/empty
+                req.setAttribute("events",   dao.searchEvents(keyword, category));
+                req.setAttribute("keyword",  keyword  != null ? keyword  : "");
+                req.setAttribute("category", category != null ? category : "");
                 req.getRequestDispatcher("index.jsp").forward(req, res);
         }
     }
 
+    // =====================================================================
+    //  POST  (add / update – login required)
+    // =====================================================================
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
+
+        if (!isLoggedIn(req)) {
+            res.sendRedirect(req.getContextPath() + "/login?msg=unauthorized");
+            return;
+        }
 
         req.setCharacterEncoding("UTF-8");
 
@@ -60,10 +106,10 @@ public class EventServlet extends HttpServlet {
 
         if (event.getId() == 0) {
             dao.addEvent(event);
-            res.sendRedirect("events?action=list&msg=added");
+            res.sendRedirect(req.getContextPath() + "/events?msg=added");
         } else {
             dao.updateEvent(event);
-            res.sendRedirect("events?action=list&msg=updated");
+            res.sendRedirect(req.getContextPath() + "/events?msg=updated");
         }
     }
 }
